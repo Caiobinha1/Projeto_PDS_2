@@ -152,10 +152,71 @@ plt.plot(f_axis, np.abs(np.fft.fft(trecho_HP))[:N_fft//2] / np.max(np.abs(np.fft
 plt.title("Espectro da Voz Filtrada por Equação de Diferenças (Item 4.3.A)")
 plt.xlabel("Frequência (Hz)")
 plt.ylabel("Magnitude Normalizada")
-plt.xlim(0, 10000)  # Foca na faixa de 0 a 10 kHz (zoom solicitado)
+plt.xlim(0, 10000)  # Faixa de 0 a 10 kHz
 plt.legend()
 plt.tight_layout()
 plt.savefig(os.path.join(PASTA_GRAFICOS, "espectros_filtragem_recursiva.png"), dpi=150)
+plt.close()
+
+# Filtragem dos cossenos do Item 4.1 (conforme pedido no enunciado)
+print("Filtrando os cossenos do Item 4.1 com os filtros projetados...")
+N_cosseno = 512
+n_c = np.arange(N_cosseno)
+x1_c = np.cos((2 * np.pi / 3) * n_c)  # Frequencia alta (2*pi/3 rad)
+x2_c = np.cos((np.pi / 4) * n_c)       # Frequencia baixa (pi/4 rad)
+
+# Passando os dois cossenos pelos 3 filtros via equacao de diferencas
+y_x1_LP = lfilter([1.0], [1.0, a_LP, b_LP], x1_c)
+y_x1_BP = lfilter([1.0], [1.0, a_BP, b_BP], x1_c)
+y_x1_HP = lfilter([1.0], [1.0, a_HP, b_HP], x1_c)
+
+y_x2_LP = lfilter([1.0], [1.0, a_LP, b_LP], x2_c)
+y_x2_BP = lfilter([1.0], [1.0, a_BP, b_BP], x2_c)
+y_x2_HP = lfilter([1.0], [1.0, a_HP, b_HP], x2_c)
+
+# FFT em modulo para analisar o que sobrou de cada cosseno
+X1_orig = np.abs(np.fft.fft(x1_c))[:N_cosseno//2]
+X1_LP = np.abs(np.fft.fft(y_x1_LP))[:N_cosseno//2]
+X1_BP = np.abs(np.fft.fft(y_x1_BP))[:N_cosseno//2]
+X1_HP = np.abs(np.fft.fft(y_x1_HP))[:N_cosseno//2]
+
+X2_orig = np.abs(np.fft.fft(x2_c))[:N_cosseno//2]
+X2_LP = np.abs(np.fft.fft(y_x2_LP))[:N_cosseno//2]
+X2_BP = np.abs(np.fft.fft(y_x2_BP))[:N_cosseno//2]
+X2_HP = np.abs(np.fft.fft(y_x2_HP))[:N_cosseno//2]
+
+k_c = np.arange(N_cosseno // 2)
+
+# Normalizamos pelo maior pico de cada grupo para comparar as alturas relativas
+max_1 = max(np.max(X1_LP), np.max(X1_BP), np.max(X1_HP), 1e-6)
+max_2 = max(np.max(X2_LP), np.max(X2_BP), np.max(X2_HP), 1e-6)
+
+plt.figure(figsize=(10, 8))
+
+# Grafico para x1 = cos(2*pi/3 * n)
+plt.subplot(2, 1, 1)
+plt.plot(k_c, X1_orig / np.max(X1_orig), 'k--', label="Cosseno Original (x1)", alpha=0.4)
+plt.plot(k_c, X1_LP / max_1, label="Após Passa-Baixas", color='blue', alpha=0.85)
+plt.plot(k_c, X1_BP / max_1, label="Após Passa-Bandas", color='green', alpha=0.85)
+plt.plot(k_c, X1_HP / max_1, label="Após Passa-Altas", color='red', alpha=0.85)
+plt.title("Efeito dos Filtros no Cosseno de Alta Frequência: cos(2*pi/3 * n)")
+plt.xlabel("Bin de Frequência k (de 0 até N/2)")
+plt.ylabel("Magnitude Relativa")
+plt.legend()
+
+# Grafico para x2 = cos(pi/4 * n)
+plt.subplot(2, 1, 2)
+plt.plot(k_c, X2_orig / np.max(X2_orig), 'k--', label="Cosseno Original (x2)", alpha=0.4)
+plt.plot(k_c, X2_LP / max_2, label="Após Passa-Baixas", color='blue', alpha=0.85)
+plt.plot(k_c, X2_BP / max_2, label="Após Passa-Bandas", color='green', alpha=0.85)
+plt.plot(k_c, X2_HP / max_2, label="Após Passa-Altas", color='red', alpha=0.85)
+plt.title("Efeito dos Filtros no Cosseno de Baixa Frequência: cos(pi/4 * n)")
+plt.xlabel("Bin de Frequência k (de 0 até N/2)")
+plt.ylabel("Magnitude Relativa")
+plt.legend()
+
+plt.tight_layout()
+plt.savefig(os.path.join(PASTA_GRAFICOS, "espectros_cossenos_filtrados.png"), dpi=150)
 plt.close()
 
 # B) Filtragem por convolucao truncada (Nc = 64 e Nc = 512)

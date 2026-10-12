@@ -83,4 +83,35 @@ for f_idx = 1:3
     disp("Audio filtrado salvo: " + nome_saida);
 end
 
+// 3. APLICANDO OS FILTROS NOS COSSENOS DO ITEM 4.1 (CONFORME ENUNCIADO)
+disp("Filtrando tambem os dois cossenos do item 4.1...");
+N_cos = 512;
+n_cos = 0:N_cos-1;
+x1 = cos((2 * %pi / 3) * n_cos); // Cosseno de frequencia mais alta (2*pi/3)
+x2 = cos((%pi / 4) * n_cos);      // Cosseno de frequencia mais baixa (pi/4)
+
+for f_idx = 1:3
+    a = as(f_idx);
+    b = bs(f_idx);
+    nome = nomes_filtros(f_idx);
+    
+    // Vetores para guardar o resultado dos cossenos filtrados
+    y_x1 = zeros(1, N_cos);
+    y_x2 = zeros(1, N_cos);
+    
+    // Amostras iniciais
+    y_x1(1) = x1(1);
+    y_x1(2) = x1(2) - a * y_x1(1);
+    y_x2(1) = x2(1);
+    y_x2(2) = x2(2) - a * y_x2(1);
+    
+    // Equacao recursiva: y[n] = x[n] - a*y[n-1] - b*y[n-2]
+    for n = 3:N_cos
+        y_x1(n) = x1(n) - a * y_x1(n-1) - b * y_x1(n-2);
+        y_x2(n) = x2(n) - a * y_x2(n-1) - b * y_x2(n-2);
+    end
+    
+    disp("Cossenos processados com sucesso no filtro " + nome + "!");
+end
+
 disp("Fim do script 4.3.A!");
